@@ -2,20 +2,48 @@
 #include "Graphs_SSD1306.h"
 
 /* --- private variables --- */ 
-static TypeGraph_SSD1306_t type;							
-static NumAxis num; 													
-static int32_t xAxis_max; 										
-static int32_t yAxis_max;											
-static int32_t yAxis_min; 									
+struct PropertiesGraphXY *PrivateGraph = NULL; 
+uint32_t x_max, y_max_min; 
+float x_scale_factor = 0.; 
+float y_scale_factor = 0.; 
+
 
 void
 initGraph(const struct PropertiesGraphXY* Graph){
-	type = Graph->type; 
-	num = Graph->numbers; 
-	xAxis_max = Graph->xAxis_max; 
-	yAxis_max = Graph->yAxis_max; 
-	yAxis_min = Graph->yAxis_min; 
 	
+	PrivateGraph = Graph; 
+	x_max = PrivateGraph->xAxis_max;
+	y_max_min = PrivateGraph->yAxis_max_min;
+	
+	if( x_max != DEFAULT_SCALE )
+		x_scale_factor = X_MAX / (float)x_max;  
+	else
+		x_max = X_MAX; 
+	
+	if( y_max_min != DEFAULT_SCALE )
+		y_scale_factor = (Y_MAX >> 1U /* /2 */) / (float)y_max_min;  
+	else
+		y_max_min = (Y_MAX >> 1U /* /2 */);	
+	
+}
+
+void
+initDefGraph(struct PropertiesGraphXY* Graph){
+	Graph->type = XY_TYPE_1; 
+	Graph->numbers = NUM_Off; 
+	Graph->xAxis_max = X_MAX;
+	Graph->yAxis_max_min = (Y_MAX >> 1U);
+	initGraph(Graph); 
+}
+
+void
+setMaxAxisX(int32_t x_axis){
+	
+	if(x_axis <= 0)
+		return; 
+	
+	if(PrivateGraph != NULL)
+		PrivateGraph->xAxis_max = x_axis; 
 }
 
 void 
@@ -28,13 +56,13 @@ createXYGraph(void){
 		drawPixel_SSD1306(0, j, White); 
 	
 	uint32_t axis_x = 0; 
-	if( type == TYPE_1 ){
+	if( PrivateGraph->type == XY_TYPE_1 ){
 		// draw axis X
 		axis_x = GDDRAM_COM / 2;
 		for(int j=0; j < GDDRAM_SEG; ++j)
 			drawPixel_SSD1306(j, axis_x, White); 
 	}
-	else if( type == TYPE_2 ){
+	else if( PrivateGraph->type == TYPE_2 ){
 		// draw axis X
 		axis_x = GDDRAM_COM - 1;
 		for(int j=0; j < GDDRAM_SEG; ++j)
@@ -43,21 +71,21 @@ createXYGraph(void){
 	
 	/* --- numbers for the axis --- */ 
 	
-	if( num != 0 ){
+	if( PrivateGraph->numbers != 0 ){
 			
-		char BufForNumbers[5] = {0};
+		char BufForNumbers[10] = {0};
 		// +Y
 		ssd1306_SetCursor(2, 0);
-		snprintf(BufForNumbers, sizeof BufForNumbers, "%d", 1);
+		snprintf(BufForNumbers, sizeof BufForNumbers, "%d", y_max_min);
 		ssd1306_WriteString(BufForNumbers, Font_6x8, White);
 		// +X	
-		int quant_chars = snprintf(BufForNumbers, sizeof BufForNumbers, "%d", 12);
+		int quant_chars = snprintf(BufForNumbers, sizeof BufForNumbers, "%d", x_max);
 		ssd1306_SetCursor(GDDRAM_SEG - quant_chars * 6, axis_x - 8);
 		ssd1306_WriteString(BufForNumbers, Font_6x8, White);
 		// -Y
-		if( type == TYPE_1 ){
+		if( PrivateGraph->type == XY_TYPE_1 ){
 			ssd1306_SetCursor(2, GDDRAM_COM - 8);
-			ssd1306_WriteChar((char)'-', Font_6x8, White); 
+			snprintf(BufForNumbers, sizeof BufForNumbers, "%d", -y_max_min);
 			ssd1306_WriteString(BufForNumbers, Font_6x8, White);
 		}
 			
@@ -68,28 +96,29 @@ createXYGraph(void){
 void 
 setCoord(int32_t x_coord, int32_t y_coord){
 	
+	if( x_max != DEFAULT_SCALE )
+		x_coord = (int32_t)(x_coord * x_scale_factor);
+
+	if( y_max_min != DEFAULT_SCALE )
+		y_coord = (int32_t)(y_coord * y_scale_factor);	
+	
+	
 	// check that the coordinates do not go beyond the permissible limits
-	if( (x_coord < 0) || (x_coord > 128) )
-		return; 
-	if( (y_coord < (-16)) || (y_coord > 16) )
+	if( (x_coord < 0) || (x_coord > X_MAX) )
 		return; 
 	
-	/* 
-	
-		need to calculate ranges
-	
-	*/ 
+	int32_t y_base_line = Y_MAX >> 1U;  /* /2 */
+	if( (y_coord < (-y_base_line)) || (y_coord > y_base_line) )
+		return; 
 	
 	
-	if( type == TYPE_1 ){
+	if( PrivateGraph->type == XY_TYPE_1 ){
 		
-		int line_y = GDDRAM_COM / 2;
-		
-		drawPixel_SSD1306(x_coord, line_y - y_coord, White); 
+		drawPixel_SSD1306(x_coord, y_base_line - y_coord, White); 
 			
 	}
 	
-	if( type == TYPE_2 ){
+	if( PrivateGraph->type == TYPE_2 ){
 		
 		
 		

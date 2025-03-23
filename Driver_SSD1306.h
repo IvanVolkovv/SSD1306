@@ -27,9 +27,9 @@
 
 #if defined SSD1306_128x32 && !defined SSD1306_128x64 && !defined SSD1306_128x128
 // for 128x32
-#define GDDRAM_SEG						128							// X [pixels]
-#define GDDRAM_COM     				32							// Y [pixels]	
-#define GDDRAM_SIZE 					512							// [bytes]	(GDDRAM_SEG * GDDRAM_COM) / 8 				
+#define GDDRAM_SEG						128								// X [pixels]
+#define GDDRAM_COM     				32								// Y [pixels]	
+#define GDDRAM_SIZE 					512								// [bytes]	(GDDRAM_SEG * GDDRAM_COM) / 8 	
 
 #elif !defined SSD1306_128x32 && defined SSD1306_128x64 && !defined SSD1306_128x128
 // for 128x64
