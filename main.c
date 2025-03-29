@@ -7,7 +7,6 @@
 
 /* --- prototypes --- */ 
 void init_SysTickTMR(void); 
-void SysTick_Handler(void);
 void delay(uint32_t); 
 
 int main(void){
@@ -27,8 +26,7 @@ int main(void){
 	
 	struct PropertiesGraphXY Graph = {0}; 
 	initDefGraph(&Graph); 
-
-	//initGraph(&Graph); 
+	initGraph(&Graph); 
 	createXYGraph(); 
 		
 	int32_t point = 0; 
@@ -39,9 +37,8 @@ int main(void){
 		++point;
 
 		if(point > Graph.xAxis_max + 10){
-			point = 0; 
-			clearScreen_SSD1306();
-			createXYGraph(); 
+			point = 0;  
+			clearXYGraph(); 
 		}
 
 		updateScreen_SSD1306();
@@ -54,33 +51,38 @@ int main(void){
 	
 }
 
+/*!
+* @brief:	Simple function for time delay
+* @note:	Counter increment every 1ms
+*/
 void delay(uint32_t ms){
 	
 	uint32_t delay_1ms = (uint32_t)(SystemCoreClock / (1000 - 1)); 
 	SysTick->LOAD = ms * delay_1ms; 																																																									
 	SysTick->VAL = 0x00; 
 	
-	// включаю системный таймер
+	// enable system timer
 	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;																													
 	
 	while( !( SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk ) )
 		continue; 
 	
-	// выключаю системный таймер
+	// turn off system timer
 	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;																														
 	
 }
 
-
+/*!
+* @brief:	Function for setting the system timer (SysTick)	
+*/
 void init_SysTickTMR(void){
-
-	SysTick->LOAD = 0x00; 																																							// Загрузка значения, от которого пойдет обратный отсчет																							
-	SysTick->VAL = 0x00; 																																								// Обнуляем таймеры и флаги. Записью
 	
-	// таймер тактируется такой же частотой как и ядро МК
-	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk; 																												// частоту тактирования брать от тактирования процессора
-	SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;																													// выключаю прерывания, когда таймер досчитает до 0
-	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;																														// выключаю системный таймер
+	SysTick->LOAD = 0x00; 																																																														
+	SysTick->VAL = 0x00; 																																								
+	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk; 																												
+	SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;																													
+	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+	
 }
 
 
