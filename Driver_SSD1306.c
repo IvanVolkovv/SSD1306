@@ -172,7 +172,6 @@ void drawPixel_SSD1306(uint8_t x, uint8_t y, SSD1306_COLOR color){
  * Font     => Font waarmee we gaan schrijven
  * color    => Black or White
  */
-
 char ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR color) {
 	
     uint32_t i, b, j;
@@ -211,6 +210,7 @@ char ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR color) {
     // Return written char for validation
     return ch;
 }
+
 
 
 /* Write full string to screenbuffer */

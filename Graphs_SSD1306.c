@@ -3,6 +3,7 @@
 
 /* --- private variables --- */ 
 struct PropertiesGraphXY PrivateGraph = {0}; 
+int32_t past_x, past_y = 0; 
 float x_scale_factor = 1.; 
 float y_scale_factor = 1.; 
 
@@ -16,6 +17,7 @@ initGraph(const struct PropertiesGraphXY* Graph){
 	// copying the structure
 	PrivateGraph.type = Graph->type; 
 	PrivateGraph.numbers = Graph->numbers; 
+	PrivateGraph.line_type = Graph->line_type; 
 	PrivateGraph.xAxis_max = Graph->xAxis_max; 
 	PrivateGraph.yAxis_max_min = Graph->yAxis_max_min; 
 	
@@ -39,7 +41,7 @@ initGraph(const struct PropertiesGraphXY* Graph){
 		if(PrivateGraph.type == XY_TYPE_1){
 			PrivateGraph.yAxis_max_min = Y_MAX >> 1U; 
 		}
-		else if(PrivateGraph.type == TYPE_2){
+		else if(PrivateGraph.type == XY_TYPE_2){
 			PrivateGraph.yAxis_max_min = Y_MAX; 
 		}
 	}
@@ -53,10 +55,11 @@ initGraph(const struct PropertiesGraphXY* Graph){
 void
 initDefGraph(struct PropertiesGraphXY* Graph){
 	
-	Graph->type = TYPE_2; 
-	Graph->numbers = NUM_On; 
+	Graph->type = XY_TYPE_2; //TYPE_2; 
+	Graph->numbers = NUM_On;               
+	Graph->line_type = STRAIGHT; //POINT; //STRAIGHT; 
 	Graph->xAxis_max = X_MAX;
-	Graph->yAxis_max_min = 15;
+	Graph->yAxis_max_min = Y_MAX;
 	
 }
 
@@ -91,7 +94,7 @@ setAxisY(int32_t y_axis){
 * @param: num - takes on values: NUM_Off, NUM_On. 
 */
 void
-setAxisNumbers(NumAxis num){
+setAxisNumbers(NumAxis_t num){
 	
 	PrivateGraph.numbers = num; 
 	
@@ -119,7 +122,7 @@ createXYGraph(void){
 		for(int j=0; j < GDDRAM_SEG; ++j)
 			drawPixel_SSD1306(j, axis_x, White); 
 	}
-	else if( PrivateGraph.type == TYPE_2 ){
+	else if( PrivateGraph.type == XY_TYPE_2 ){
 		// draw axis X
 		axis_x = GDDRAM_COM - 1;
 		for(int j=0; j < GDDRAM_SEG; ++j)
@@ -162,6 +165,13 @@ clearXYGraph(void){
 }
 
 /*!
+* @brief: Function for update
+*/
+void updateGraph(void){
+	updateScreen_SSD1306();
+}
+
+/*!
 * @brief:	Function to set a point at X,Y coordinate
 * @param: x_coord, y_coord - x and y coordinates of a point. 
 */
@@ -170,41 +180,59 @@ setCoord(int32_t x_coord, int32_t y_coord){
 	
 	x_coord = (int32_t)(x_coord * x_scale_factor);
 	y_coord = (int32_t)(y_coord * y_scale_factor);	
-	
-	if( (x_coord < 0) || (x_coord > X_MAX) )
-		return; 
+
+	if( x_coord > X_MAX )
+		x_coord = X_MAX; 
+	else if( x_coord < 0 )
+		x_coord = 0; 
+		
+	int32_t y_base_line = 0; 
 	
 	if( PrivateGraph.type == XY_TYPE_1 ){
 		
-		int32_t y_base_line = Y_MAX >> 1U;  /* /2 */
-		if( (y_coord < (-y_base_line)) || (y_coord > y_base_line) )
-			return; 
-	
-		drawPixel_SSD1306(x_coord, y_base_line - y_coord, White); 
+		y_base_line = Y_MAX >> 1U;  /* /2 */
+		 
+		if( y_coord > y_base_line ) 
+			y_coord = y_base_line; 
+		else if( y_coord < (-y_base_line) )
+			y_coord = -y_base_line; 
 			
 	}
-	
-	if( PrivateGraph.type == TYPE_2 ){
+	else if( PrivateGraph.type == XY_TYPE_2 ){
 		
-		int32_t y_base_line = Y_MAX; 
-		if( (y_coord < 0) || (y_coord > y_base_line) )
-			return; 
-		
-		drawPixel_SSD1306(x_coord, y_base_line - y_coord, White);
+		y_base_line = Y_MAX; 
+
+		if( y_coord > y_base_line ) 
+			y_coord = y_base_line; 
+		else if( y_coord < 0 )
+			y_coord = 0; 
 		
 	}
 	
+	if( PrivateGraph.line_type == STRAIGHT ){
+				
+			/* 
+				To interpolate values between data points, an equation is used 
+				that fits a line that passes through the two points.
+				y(x) = ( (y2-y1)/(x2-x1) ) * (x - x1) + y1 
+			*/ 
+		
+			uint32_t step_x = x_coord - past_x; 
+			float k = (y_coord - past_y) / (float)step_x; 
+		
+			int32_t y = 0; 
+			for(int x = past_x; x < x_coord; ++x){
+				y = k * (x - past_x) + past_y;
+				drawPixel_SSD1306(x, y_base_line - y, White);
+			}
+			
+			past_x = x_coord; 
+			past_y = y_coord; 
+		
+		}
+		else{
+			drawPixel_SSD1306(x_coord, y_base_line - y_coord, White);
+		}
+		
 }
-
-
-
-
-
- 
-
-
-
-
-
-
 

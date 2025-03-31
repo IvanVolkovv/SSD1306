@@ -31,9 +31,24 @@ int main(void){
 		
 	int32_t point = 0; 
 	
+	setCoord(0, 20);  
+	setCoord(10, 5); 
+	setCoord(20, 10); 
+	setCoord(30, 5);
+	setCoord(40, 10);
+	setCoord(50, 1);
+	setCoord(60, 25);
+	setCoord(70, 25);
+	setCoord(80, 7);
+	setCoord(90, 12);
+	setCoord(100, 7);
+	setCoord(120, 100); 
+	updateGraph();
+	
 	while(1){
 		
-		setCoord(point, 15*sin(2*3.1415*0.05*point));  
+		/*
+		setCoord(point, 30*sin(2*3.1415*0.02*point));  
 		++point;
 
 		if(point > Graph.xAxis_max + 10){
@@ -41,8 +56,9 @@ int main(void){
 			clearXYGraph(); 
 		}
 
-		updateScreen_SSD1306();
-				
+		// updateScreen_SSD1306();
+		updateGraph();
+		*/		
 		delay(50);																						// 50 [ms]
 							
 	}

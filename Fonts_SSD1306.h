@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-
 // Font 
 typedef struct {
 	const uint8_t width;                // Font width in pixels 

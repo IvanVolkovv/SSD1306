@@ -16,24 +16,30 @@
 #define X_MAX				(GDDRAM_SEG - 1)	// default max axis value, scale 1:1
 #define Y_MAX				(GDDRAM_COM - 1)	// default max axis value, scale 1:1
 
-#define CHECK_TYPE_GRAPH(TYPE)				(((TYPE) == XY_TYPE_1) || ((TYPE) == TYPE_2))
+#define CHECK_TYPE_GRAPH(TYPE)				(((TYPE) == XY_TYPE_1) || ((TYPE) == XY_TYPE_2))
 																
 
 typedef enum {
 	XY_TYPE_1,												
-	TYPE_2,												
+	XY_TYPE_2,												
 	TYPE_3,												
-	TYPE_4,												
+	TYPE_4											
 } TypeGraph_SSD1306_t; 
 
 typedef enum {
 	NUM_Off,											
-	NUM_On,												
-} NumAxis;
+	NUM_On											
+} NumAxis_t;
+
+typedef enum {
+	POINT,											
+	STRAIGHT
+} LineType_t;
 
 struct PropertiesGraphXY{
 	TypeGraph_SSD1306_t type;					// type of graph
-	NumAxis numbers; 									// on/off numbers for axles
+	NumAxis_t numbers; 								// on/off numbers for axles
+	LineType_t line_type;  						// line type to draw
 	int32_t xAxis_max; 								// maximum value of the X axis
 	int32_t yAxis_max_min;						// maximum and minimum value of the Y axis
 }; 
@@ -44,8 +50,9 @@ void initGraph(const struct PropertiesGraphXY*);
 void initDefGraph(struct PropertiesGraphXY*); 
 void setMaxAxisX(int32_t); 
 void setAxisY(int32_t); 
-void setAxisNumbers(NumAxis); 
+void setAxisNumbers(NumAxis_t); 
 void clearXYGraph(void); 
+void updateGraph(void); 
 void setCoord(int32_t, int32_t);
 
 
