@@ -21,3 +21,9 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/06c07e6a-1846-4018-8570-7987a8c60431">
 </p> 
+
+Тип отрисовки данных: .line_type = POINT или .line_type = STRAIGHT
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7207d1b0-b6b6-4033-bdc2-ce37f43eb8ef">
+</p> 
+
