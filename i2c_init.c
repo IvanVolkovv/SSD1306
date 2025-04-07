@@ -135,7 +135,8 @@ I2C_SendAddr(I2C_TypeDef *i2c, uint8_t send_addres, uint8_t direction){
 *						quant_bytes - number of bytes to read.
 * @retval:	0 - is OK; (-1) - ERROR. 
 */
-int8_t I2C_ReadData(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t addr_reg,  uint8_t* data_out, uint8_t quant_bytes){
+int8_t 
+I2C_ReadData(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t addr_reg,  uint8_t* data_out, uint8_t quant_bytes){
 	
 	I2C_SendStartBit(i2c); 
 	I2C_SendAddr(i2c, addr_device, WRITE_DATA); 
@@ -181,7 +182,8 @@ int8_t I2C_ReadData(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t addr_reg,  ui
 *						quant_bytes - number of bytes to write.
 * @retval:	0 - is OK; (-1) - ERROR. 
 */
-int8_t I2C_WriteBytes(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t* data_in, uint8_t quant_bytes){
+int8_t 
+I2C_WriteBytes(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t* data_in, uint8_t quant_bytes){
 
 	I2C_SendStartBit(i2c); 
 	I2C_SendAddr(i2c, addr_device, WRITE_DATA); 
@@ -210,7 +212,8 @@ int8_t I2C_WriteBytes(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t* data_in, u
 *						data_in - byte to write.  
 * @retval:	0 - is OK; (-1) - ERROR. 
 */
-int8_t I2C_WriteByte(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t data_in){
+int8_t 
+I2C_WriteByte(I2C_TypeDef *i2c, uint8_t addr_device, uint8_t data_in){
 	
 	I2C_SendStartBit(i2c); 
 	I2C_SendAddr(i2c, addr_device, WRITE_DATA);

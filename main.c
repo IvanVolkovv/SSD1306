@@ -4,10 +4,15 @@
 #include "i2c_init.h"
 #include "Driver_SSD1306.h" 
 #include "Graphs_SSD1306.h" 
+#include "Widgets_SSD1306.h"
+
 
 /* --- prototypes --- */ 
 void init_SysTickTMR(void); 
 void delay(uint32_t); 
+
+
+
 
 int main(void){
 	
@@ -16,6 +21,8 @@ int main(void){
 	
 	init_SSD1306();
 	clearScreen_SSD1306();
+
+/* ------------------------------------------------------------------------ */ 	
 	
 //	struct PropertiesGraphXY Graph = {
 //			.type = XY_TYPE_1, 
@@ -24,26 +31,60 @@ int main(void){
 //			.yAxis_max_min = 5
 //	}; 
 	
-	struct PropertiesGraphXY Graph = {0}; 
-	initDefGraph(&Graph); 
-	initGraph(&Graph); 
-	createXYGraph(); 
-		
-	int32_t point = 0; 
+//	struct PropertiesGraphXY Graph = {0}; 
+//	initDefGraph(&Graph); 
+//	initGraph(&Graph); 
+//	createXYGraph(); 
+//		
+//	int32_t point = 0; 
+//	
+//	setCoord(0, 20);  
+//	setCoord(10, 5); 
+//	setCoord(20, 10); 
+//	setCoord(30, 5);
+//	setCoord(40, 10);
+//	setCoord(50, 1);
+//	setCoord(60, 25);
+//	setCoord(70, 25);
+//	setCoord(80, 7);
+//	setCoord(90, 12);
+//	setCoord(100, 7);
+//	setCoord(120, 100); 
+//	updateGraph();
 	
-	setCoord(0, 20);  
-	setCoord(10, 5); 
-	setCoord(20, 10); 
-	setCoord(30, 5);
-	setCoord(40, 10);
-	setCoord(50, 1);
-	setCoord(60, 25);
-	setCoord(70, 25);
-	setCoord(80, 7);
-	setCoord(90, 12);
-	setCoord(100, 7);
-	setCoord(120, 100); 
-	updateGraph();
+	
+	
+	// setSizeDrawArea(50, 60, 0, 1); 
+	
+	/*
+	drawPixel_SSD1306(0, 0, White); 
+	drawPixel_SSD1306(1, 1, White); 
+	drawPixel_SSD1306(2, 2, White);
+	drawPixel_SSD1306(50, 8, White); 
+	drawPixel_SSD1306(51, 9, White); 
+	drawPixel_SSD1306(52, 10, White); 
+	 */ 
+	
+	
+	/*
+	for(int i=0; i < 10; ++i)
+		for(int j=0; j < 8; ++j)
+			drawPixel_SSD1306(i, j, White); 
+	
+	// updateScreen_SSD1306();   
+	updateScreen_SSD1306_D(10); 
+	*/ 
+	
+/* ---------------------------------------------------------------------------- */ 
+
+
+	// drawSimpleLine(10, 5, 50, 5); 
+	// drawSimpleLine(10, 5, 10, 25); 
+	
+	
+	createBattWidget(50, 5, 20, 20); 
+	updateScreen_SSD1306();
+
 	
 	while(1){
 		

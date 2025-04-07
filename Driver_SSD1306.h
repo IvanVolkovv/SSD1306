@@ -65,6 +65,11 @@ void init_SSD1306(void);
 void updateScreen_SSD1306(void); 
 void clearScreen_SSD1306(void); 
 void setPixel(uint8_t, uint8_t); 
+void setSizeDrawArea(int32_t, int32_t, int32_t, int32_t); 
+void setDefDrawArea(void); 
+
+/* DEBUG */ 
+void updateScreen_SSD1306_D(int32_t); 
 
 /* import */ 
 void drawPixel_SSD1306(uint8_t, uint8_t, SSD1306_COLOR);
