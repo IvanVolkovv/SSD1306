@@ -2,10 +2,10 @@
 #include "Graphs_SSD1306.h"
 
 /* --- private variables --- */ 
-struct PropertiesGraphXY PrivateGraph = {0}; 
-int32_t past_x, past_y = 0; 
-float x_scale_factor = 1.; 
-float y_scale_factor = 1.; 
+static struct PropertiesGraphXY PrivateGraph = {0}; 
+static int32_t past_x, past_y = 0; 
+static float x_scale_factor = 1.; 
+static float y_scale_factor = 1.; 
 
 /*!
 * @brief:	Function to set graph properties

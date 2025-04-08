@@ -11,9 +11,6 @@
 void init_SysTickTMR(void); 
 void delay(uint32_t); 
 
-
-
-
 int main(void){
 	
 	init_SysTickTMR();
@@ -81,8 +78,11 @@ int main(void){
 	// drawSimpleLine(10, 5, 50, 5); 
 	// drawSimpleLine(10, 5, 10, 25); 
 	
-	
-	createBattWidget(50, 5, 20, 20); 
+	// 8õ4
+	// 12õ6 **
+	// 16õ8 **
+	// 20õ10 ** 
+	createBattWidget(50, 5, Size_8x4); 
 	updateScreen_SSD1306();
 
 	
