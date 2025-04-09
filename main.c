@@ -82,9 +82,12 @@ int main(void){
 	// 12õ6 **
 	// 16õ8 **
 	// 20õ10 ** 
-	createBattWidget(50, 5, Size_8x4); 
+	createBattWidget(50, 5, Size_20x10);
+	setBatLevel(0); 	
 	updateScreen_SSD1306();
 
+	
+	int32_t lvl = 0; 
 	
 	while(1){
 		
@@ -100,8 +103,21 @@ int main(void){
 		// updateScreen_SSD1306();
 		updateGraph();
 		*/		
-		delay(50);																						// 50 [ms]
-							
+		
+		
+		setBatLevel(lvl); 	
+		updateScreen_SSD1306();
+		
+		
+		
+		
+		if(lvl == 4)
+			lvl = 0; 
+		else
+			++lvl;
+		
+		delay(1000);																						// 50 [ms]
+
 	}
 			
 	return 0;
@@ -136,7 +152,7 @@ void init_SysTickTMR(void){
 	
 	SysTick->LOAD = 0x00; 																																																														
 	SysTick->VAL = 0x00; 																																								
-	SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk; 																												
+	//SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk; 																												
 	SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;																													
 	SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 	
