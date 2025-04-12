@@ -25,7 +25,7 @@
 /* --- device address --- */ 
 #define ADDR_SSD1306					0x78
 
-#if defined SSD1306_128x32 && !defined SSD1306_128x64 && !defined SSD1306_128x128
+#if defined ( SSD1306_128x32 ) && !defined ( SSD1306_128x64 ) && !defined ( SSD1306_128x128 )
 // for 128x32
 #define GDDRAM_SEG						128								// X [pixels]
 #define GDDRAM_COM     				32								// Y [pixels]	
@@ -43,13 +43,47 @@
 #define GDDRAM_COM     				128							
 #define GDDRAM_SIZE 					2048
 
+#else 
+#warning Display size not selected 
 #endif
+ 
+
+ /* --- list of commands --- */ 
+#define DISPLAY_ON			0xAFu						// Set Display ON
+#define DISPLAY_OFF			0xAEu						// Set Display OFF
+
+#define DSPL_SET_CLK		0xD5u						// Set Display Clock
+ 
+#define DSPL_SET_PUMP		0x8Du						// Charge Pump Setting
+#define DSPL_PUMP_ON		0x14u						// Charge Pump ON
+#define DSPL_PUMP_OFF		0x10u						// Charge Pump OFF
+
+#define DSPL_STR_LINE		0x40u						// Set Display Start Line		
+
+#define DSPL_SET_OFFSET	0xD3u						// Set Display Offset
+
+// Set COM Output Scan Direction
+#define DSPL_COM_SCAN_NORM	0xC0u				// normal mode		
+#define DSPL_COM_SCAN_REMP	0xC8u				// remapped mode
+
+#define DSPL_MTPLX_RATIO		0xA8u				// Set Multiplex Ratio
+
+// Set Segment Re-map
+#define DSPL_SGT_RMP_LEFT		0xA0u		
+#define DSPL_SGT_RMP_RGHT		0xA1u	
+
+// Set COM pins hardware configuration
+#define DSPL_PIN_CNFG				0xDAu	
+#define DSPL_PIN_SERIAL			0x00				// COM serial pin configuration.
+#define DSPL_PIN_ALTRV			0x10u				// alternative COM pin configuration.
+#define DSPL_PIN_RGHT				0x30u				// Enable COM Left/Right remap.
+		
 
 // Enumeration for screen colors
 typedef enum {
 	Black = 0x00, // Black color, no pixel
 	White = 0x01  // Pixel is set. Color depends on OLED
-} SSD1306_COLOR;
+} SSD1306_COLOR_t;
 
 // Struct to store transformations
 typedef struct {
@@ -61,6 +95,15 @@ typedef struct {
 
 
 /* --- prototypes --- */ 
+void setDisplayEnable(uint8_t); 
+static void setDisplayClock(uint8_t, uint8_t);
+static void setChargePump(uint8_t); 
+static void setStartLine(uint8_t);
+static void setDisplayOffset(uint8_t); 
+static void setCOMScanDirection(uint8_t); 
+static void setMultiplexRatio(uint8_t); 
+static void setSegmentRemap(uint8_t);
+static void setCOMHardConfig(uint8_t); 
 void init_SSD1306(void);
 void updateScreen_SSD1306(void); 
 void clearScreen_SSD1306(void); 
@@ -72,9 +115,9 @@ void setDefDrawArea(void);
 void updateScreen_SSD1306_D(int32_t); 
 
 /* import */ 
-void drawPixel_SSD1306(uint8_t, uint8_t, SSD1306_COLOR);
-char ssd1306_WriteChar(char, SSD1306_Font_t, SSD1306_COLOR); 
-char ssd1306_WriteString(char*, SSD1306_Font_t, SSD1306_COLOR);
+void drawPixel_SSD1306(uint8_t, uint8_t, SSD1306_COLOR_t);
+static char ssd1306_WriteChar(char, SSD1306_Font_t, SSD1306_COLOR_t); 
+char ssd1306_WriteString(char*, SSD1306_Font_t, SSD1306_COLOR_t);
 void ssd1306_SetCursor(uint8_t, uint8_t); 
 
 

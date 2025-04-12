@@ -3,10 +3,155 @@
 #include "i2c_init.h"
 
 // array to store the pixel field
-uint8_t DisplayBuffer[GDDRAM_SIZE] = {0};
+static uint8_t DisplayBuffer[GDDRAM_SIZE] = {0};
 
 // Screen object
 static SSD1306_t SSD1306 = {0, 0, 0, 0};
+
+
+/*!
+* @brief:	Function for enable display
+* @param: enable - DISPLAY_ON or DISPLAY_OFF. 
+*/
+void
+setDisplayEnable(uint8_t enable){
+	if( enable == DISPLAY_ON || enable == DISPLAY_OFF )
+		sendCommand(I2C2, ADDR_SSD1306, &enable, 1U); 	
+}
+
+/*!
+* @brief:	Function for setting the clock frequency of the display
+* @param: set_DCLK - Divide Ratio. Allowed values: 0 - 14 (the value is automatically increased by +1).  
+*					set_F_OSC	- Oscillator Frequency. Allowed values: 0 - 15. 
+*/
+static void
+setDisplayClock(uint8_t set_DCLK, uint8_t set_F_OSC){
+	
+	if( set_DCLK > 14U || set_F_OSC > 15U ){	
+		set_DCLK = 0; 
+		set_F_OSC = 0;	}
+		
+	set_DCLK |= (set_F_OSC << 4); 
+	
+	uint8_t DataSend[] = {DSPL_SET_CLK, set_DCLK}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for setting charge pump
+* @param: set_pump - DSPL_PUMP_ON or DSPL_PUMP_OFF. 
+*/
+static void
+setChargePump(uint8_t set_pump){
+	
+	if( set_pump != DSPL_PUMP_ON && set_pump != DSPL_PUMP_OFF )
+		return; 
+	
+	uint8_t DataSend[] = {DSPL_SET_PUMP, set_pump}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for set display start line
+* @param: set_pump - DSPL_PUMP_ON or DSPL_PUMP_OFF. 
+*/
+static void
+setStartLine(uint8_t number_line){
+	
+	if( number_line > 64)
+		return; 
+	
+	number_line |= DSPL_STR_LINE; 
+	sendCommand(I2C2, ADDR_SSD1306, &number_line, 1U); 	
+}
+
+/*!
+* @brief:	Function for set display offset
+* @param: line_offset - Allowed values: 0 - 64
+*/
+static void
+setDisplayOffset(uint8_t line_offset){
+	
+	if( line_offset >= 64)
+		return; 
+	
+	uint8_t DataSend[] = {DSPL_SET_OFFSET, line_offset}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for set COM output scan direction
+* @param: scan_direction - DSPL_COM_SCAN_NORM or DSPL_COM_SCAN_REMP. 
+*/
+static void
+setCOMScanDirection(uint8_t scan_direction){
+	
+	if( scan_direction != DSPL_COM_SCAN_NORM && scan_direction != DSPL_COM_SCAN_REMP )
+		return; 
+	sendCommand(I2C2, ADDR_SSD1306, &scan_direction, 1U); 	
+}
+
+/*!
+* @brief:	Function for set multiplex ratio
+* @param: ratio - Allowed values: 15 - 63. 
+*/
+static void
+setMultiplexRatio(uint8_t ratio){
+	
+	if( ratio < 15 || ratio >= 64)
+		return; 
+	
+	uint8_t DataSend[] = {DSPL_MTPLX_RATIO, ratio}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for set segment re-map
+* @param: remap - DSPL_SGT_RMP_LEFT or DSPL_SGT_RMP_RGHT. 
+*/
+static void
+setSegmentRemap(uint8_t remap){
+	
+	if( remap != DSPL_SGT_RMP_LEFT && remap != DSPL_SGT_RMP_RGHT )
+		return; 
+	sendCommand(I2C2, ADDR_SSD1306, &remap, 1U); 	
+}
+
+/*!
+* @brief:	Function for set COM pins hardware configuration
+* @param: pins_config - DSPL_PIN_SERIAL or DSPL_PIN_ALTRV or DSPL_PIN_RGHT.  
+*/
+static void
+setCOMHardConfig(uint8_t pins_config){
+	
+	if( pins_config != DSPL_PIN_SERIAL	&& 
+			pins_config != DSPL_PIN_ALTRV 	&&
+			pins_config != DSPL_PIN_RGHT		)
+		return; 
+	
+	pins_config |= 0x02U; 
+	
+	uint8_t DataSend[] = {DSPL_PIN_CNFG, pins_config}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for set COM pins hardware configuration
+* @param: pins_config - DSPL_PIN_SERIAL or DSPL_PIN_ALTRV or DSPL_PIN_RGHT.  
+*/
+static void
+setCOMHardConfig(uint8_t pins_config){
+	
+	if( pins_config != DSPL_PIN_SERIAL	&& 
+			pins_config != DSPL_PIN_ALTRV 	&&
+			pins_config != DSPL_PIN_RGHT		)
+		return; 
+	
+	pins_config |= 0x02U; 
+	
+	uint8_t DataSend[] = {DSPL_PIN_CNFG, pins_config}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
 
 
 void 
@@ -14,67 +159,15 @@ init_SSD1306(void){
 	
   uint8_t Data[3];
 	
-  /* -------------------------------------------------------------------- */
-	
-  // Set display off // 0xAE экран выключен (sleep mode, режим сна. Состояние после сброса).
-	// выключаю дисплей
-  Data[0] = 0xAE;
-	sendCommand(I2C2, ADDR_SSD1306, Data, 1); 
-  
-	/* -------------------------------------------------------------------- */ 
-	
-  // Set oscillator frequency
-	// Set Display Clock Divide Ratio/Oscillator Frequency
-  Data[0] = 0xD5;
-  Data[1] = 0x80;
-	sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-  
-	/* -------------------------------------------------------------------- */ 
-	
-  // Enable charge pump regulator
-	// Таблица команд зарядового насоса
-  Data[0] = 0x8D;
-  Data[1] = 0x14;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-	
-	/* -------------------------------------------------------------------- */ 
-	
-  // Set display start line
-  Data[0] = 0x40;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 1);
-	
-	/* -------------------------------------------------------------------- */ 
-  
-	// Set display offset
-  Data[0] = 0xD3;
-  Data[1] = 0;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-	
-	/* -------------------------------------------------------------------- */ 
-	
-	// Set COM output scan direction
-  Data[0] = 0xC0; /*data[0] = 0xC8;*/  
-	sendCommand(I2C2, ADDR_SSD1306, Data, 1);
-	
-	/* -------------------------------------------------------------------- */ 
-	
-	// Set MUX ratio
-	Data[0] = 0xA8;
-	Data[1] = 63; /*data[1] = 0x1F*/; 
-  sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-	
-	/* -------------------------------------------------------------------- */ 
-	
-  // Set segment remap
-	Data[0] = 0xA0;   // data[0] = 0xA1; 
-  sendCommand(I2C2, ADDR_SSD1306, Data, 1);
-  
-	/* -------------------------------------------------------------------- */ 
-  
-  // Set COM pins hardware configuration
-	Data[0] = 0xDA;
-	Data[1] = 0x02; /*data[1] = 0x12*/;
-	sendCommand(I2C2, ADDR_SSD1306, Data, 2);
+	setDisplayEnable(DISPLAY_OFF); 
+	setDisplayClock(0x00, 0x08); 
+	setChargePump(DSPL_PUMP_ON); 
+	setStartLine(0);
+	setDisplayOffset(0); 
+	setCOMScanDirection(DSPL_COM_SCAN_NORM);
+	setMultiplexRatio(63U); 
+	setSegmentRemap(DSPL_SGT_RMP_LEFT); 
+	setCOMHardConfig(DSPL_PIN_SERIAL); 
   
 	/* Set Memory Addressing Mode -------------------- */ 
 	// Set horizontal addressing mode
@@ -110,11 +203,9 @@ init_SSD1306(void){
   Data[0] = 0xA6;				// работает
 	sendCommand(I2C2, ADDR_SSD1306, Data, 1);
 	
-  // Set display on // 0xAF экран включен в нормальном режиме.
-  Data[0] = 0xAF;
-	sendCommand(I2C2, ADDR_SSD1306, Data, 1);
 	
-	
+	/* ------------------------------------------------------ */ 
+	setDisplayEnable(DISPLAY_ON); 
 	/* ------------------------------------------------------ */ 
 	
 	// Set default values for screen object
@@ -157,7 +248,7 @@ setPixel(uint8_t x, uint8_t y){
  * color => Pixel color
  */
 void 
-drawPixel_SSD1306(uint8_t x, uint8_t y, SSD1306_COLOR color){
+drawPixel_SSD1306(uint8_t x, uint8_t y, SSD1306_COLOR_t color){
 	
     if(x >= GDDRAM_SEG || y >= GDDRAM_COM)
         return;															 															// Don't write outside the buffer
@@ -175,8 +266,8 @@ drawPixel_SSD1306(uint8_t x, uint8_t y, SSD1306_COLOR color){
  * Font     => Font waarmee we gaan schrijven
  * color    => Black or White
  */
-char 
-ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR color) {
+static char 
+ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR_t color) {
 	
     uint32_t i, b, j;
     
@@ -202,9 +293,9 @@ ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR color) {
         for(j = 0; j < Font.width; ++j){
 					
 					if( (b << j) & 0x8000 )
-						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR) color);
+						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t) color);
 					else
-						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR)!color);	
+						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t)!color);	
         }
     }
 	
@@ -219,7 +310,7 @@ ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR color) {
 
 /* Write full string to screenbuffer */
 char 
-ssd1306_WriteString(char* str, SSD1306_Font_t Font, SSD1306_COLOR color) {
+ssd1306_WriteString(char* str, SSD1306_Font_t Font, SSD1306_COLOR_t color) {
     while (*str) {
         if (ssd1306_WriteChar(*str, Font, color) != *str) {
             // Char could not be written
