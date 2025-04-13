@@ -2,11 +2,9 @@
 #include "Driver_SSD1306.h"
 #include "i2c_init.h"
 
-// array to store the pixel field
+/* declaration and definition ----------------------------------------- */ 
 static uint8_t DisplayBuffer[GDDRAM_SIZE] = {0};
-
-// Screen object
-static SSD1306_t SSD1306 = {0, 0, 0, 0};
+static struct SSD1306_t SSD1306 = {0, 0, 0, 0};
 
 
 /*!
@@ -58,7 +56,7 @@ setChargePump(uint8_t set_pump){
 static void
 setStartLine(uint8_t number_line){
 	
-	if( number_line > 64)
+	if( number_line > 64 )
 		return; 
 	
 	number_line |= DSPL_STR_LINE; 
@@ -72,7 +70,7 @@ setStartLine(uint8_t number_line){
 static void
 setDisplayOffset(uint8_t line_offset){
 	
-	if( line_offset >= 64)
+	if( line_offset >= 64 )
 		return; 
 	
 	uint8_t DataSend[] = {DSPL_SET_OFFSET, line_offset}; 
@@ -98,7 +96,7 @@ setCOMScanDirection(uint8_t scan_direction){
 static void
 setMultiplexRatio(uint8_t ratio){
 	
-	if( ratio < 15 || ratio >= 64)
+	if( ratio < 15 || ratio >= 64 )
 		return; 
 	
 	uint8_t DataSend[] = {DSPL_MTPLX_RATIO, ratio}; 
@@ -119,7 +117,7 @@ setSegmentRemap(uint8_t remap){
 
 /*!
 * @brief:	Function for set COM pins hardware configuration
-* @param: pins_config - DSPL_PIN_SERIAL or DSPL_PIN_ALTRV or DSPL_PIN_RGHT.  
+* @param: pins_config - DSPL_PIN_SERIAL, DSPL_PIN_ALTRV, DSPL_PIN_RGHT.  
 */
 static void
 setCOMHardConfig(uint8_t pins_config){
@@ -136,28 +134,86 @@ setCOMHardConfig(uint8_t pins_config){
 }
 
 /*!
-* @brief:	Function for set COM pins hardware configuration
-* @param: pins_config - DSPL_PIN_SERIAL or DSPL_PIN_ALTRV or DSPL_PIN_RGHT.  
+* @brief:	Function for set memory addressing mode
+* @param: mode - DSPL_SET_ADDR_HORZ, DSPL_SET_ADDR_VRTL, DSPL_SET_ADDR_PAGE.  
 */
 static void
-setCOMHardConfig(uint8_t pins_config){
+setMemAddrMode(uint8_t mode){
 	
-	if( pins_config != DSPL_PIN_SERIAL	&& 
-			pins_config != DSPL_PIN_ALTRV 	&&
-			pins_config != DSPL_PIN_RGHT		)
+	if( mode > 2U )
 		return; 
 	
-	pins_config |= 0x02U; 
-	
-	uint8_t DataSend[] = {DSPL_PIN_CNFG, pins_config}; 
+	uint8_t DataSend[] = {DSPL_SET_ADDR_MODE, mode}; 
 	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
 }
 
+/*!
+* @brief:	Function for set column address
+* @param: addr_start - starting column addresses (allowed values: 0 - 127);
+*					addr_end - final column addresses (allowed values: 0 - 127). 
+*/
+static void
+setColumnAddr(uint8_t addr_start, uint8_t addr_end){
+	
+	if( addr_start > 127U || addr_end > 127U )
+		return; 
+	
+	uint8_t DataSend[] = {DSPL_SET_COLM_ADDR, addr_start, addr_end}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
 
+/*!
+* @brief:	Function for set page address
+* @param: addr_start - starting page addresses, (allowed values: 0 - GDDRAM_PAGES);
+*					addr_end - final page addresses, (allowed values: 0 - GDDRAM_PAGES). 
+*/
+static void
+setPageAddr(uint8_t addr_start, uint8_t addr_end){
+	
+	if( addr_start > GDDRAM_PAGES || addr_end > GDDRAM_PAGES )
+		return; 
+	
+	uint8_t DataSend[] = {DSPL_SET_PAGE_ADDR, addr_start, addr_end}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for set contrast level
+* @param: contrast - contrast level, (allowed values: 0 - 256). 
+*/
+static void
+setContrastControl(uint8_t contrast){
+	uint8_t DataSend[] = {DSPL_SET_CONTRAST, contrast}; 
+	sendCommand(I2C2, ADDR_SSD1306, DataSend, sizeof(DataSend)); 	
+}
+
+/*!
+* @brief:	Function for entire display
+* @param: entire - entire display ON, ( allowed values: DSPL_SET_ENTR_RSM or DSPL_SET_ENTR_RSM ).  
+*/
+static void
+setEntireEnable(uint8_t entire){
+	if( entire != DSPL_SET_ENTR_RSM && entire != DSPL_SET_ENTR_FLL )
+		return; 
+	sendCommand(I2C2, ADDR_SSD1306, &entire, 1U);
+}
+
+/*!
+* @brief:	Function for set normal/inverse display
+* @param: inverse - normal or inverse mode, ( allowed values: DSPL_SET_INVR_OFF or DSPL_SET_INVR_ON ).  
+*/
+static void
+setDisplayInverse(uint8_t inverse){
+	if( inverse != DSPL_SET_INVR_OFF && inverse != DSPL_SET_INVR_ON )
+		return; 
+	sendCommand(I2C2, ADDR_SSD1306, &inverse, 1U);
+}
+
+/*!
+* @brief:	Function for display initialization
+*/
 void 
 init_SSD1306(void){
-	
-  uint8_t Data[3];
 	
 	setDisplayEnable(DISPLAY_OFF); 
 	setDisplayClock(0x00, 0x08); 
@@ -168,77 +224,42 @@ init_SSD1306(void){
 	setMultiplexRatio(63U); 
 	setSegmentRemap(DSPL_SGT_RMP_LEFT); 
 	setCOMHardConfig(DSPL_PIN_SERIAL); 
-  
-	/* Set Memory Addressing Mode -------------------- */ 
-	// Set horizontal addressing mode
-  Data[0] = 0x20;
-  Data[1] = 0x00;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-  
-	/* Set column address ---------------------------- */ 
-  Data[0] = 0x21;
-  Data[1] = 0;
-  Data[2] = (GDDRAM_SEG - 1);
-  sendCommand(I2C2, ADDR_SSD1306, Data, 3);
-  
-	/* Set page address ------------------------------ */ 
-  Data[0] = 0x22;
-  Data[1] = 0;
-  Data[2] = (GDDRAM_COM >> 3U) - 1;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 3);
-  
-	/* Set contrast ---------------------------------- */ 
-	Data[0] = 0x80;
-	Data[1] = 0x7F;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 2);
-	
-	/* -------------------------------------------------------------------------------------------------------- */ 
-	
-	
-  // Entire display on	// 0xA4, возобновить отображение содержимого RAM (состояние после сброса).
-  Data[0] = 0xA4;
-  sendCommand(I2C2, ADDR_SSD1306, Data, 1);
-	
-  //Set normal display	// 0xA6, нормальное отображение (состояние по умолчанию после сброса). Лог. 0 бита соответствует погашенной точке, 1 светящейся точке.
-  Data[0] = 0xA6;				// работает
-	sendCommand(I2C2, ADDR_SSD1306, Data, 1);
-	
-	
-	/* ------------------------------------------------------ */ 
+	setMemAddrMode(DSPL_SET_ADDR_HORZ); 
+	setColumnAddr(0, GDDRAM_SEG - 1);
+	setPageAddr(0, 3U); 
+	setContrastControl(200); 
+	setEntireEnable(DSPL_SET_ENTR_RSM); 
+	setDisplayInverse(DSPL_SET_INVR_OFF); 
 	setDisplayEnable(DISPLAY_ON); 
-	/* ------------------------------------------------------ */ 
-	
+ 
 	// Set default values for screen object
 	SSD1306.CurrentX = 0;
 	SSD1306.CurrentY = 0;
 	SSD1306.Initialized = 1;
-	
-	/* ------------------------------------------------------ */ 
-	
 }
 
+/*!
+* @brief:	Function for update of screen
+*/
 void 
 updateScreen_SSD1306(void){  
 	sendData(I2C2, ADDR_SSD1306, DisplayBuffer, GDDRAM_SIZE);
 }
 
+/* test */ 
 void 
 updateScreen_SSD1306_D(int32_t size_buff){  
 	sendData(I2C2, ADDR_SSD1306, DisplayBuffer, size_buff);
 }
 
+/*!
+* @brief:	Function for clear screen
+*/
 void 
 clearScreen_SSD1306(void){
-	
   for (uint16_t i = 0; i < GDDRAM_SIZE; i++)
     DisplayBuffer[i] = 0x00;
-	
   updateScreen_SSD1306();
-}
-
-void 
-setPixel(uint8_t x, uint8_t y){
-  DisplayBuffer[x + (y / 8) * GDDRAM_SEG] |= (1 << (y % 8));
 }
 
 /*
@@ -368,29 +389,3 @@ setDefDrawArea(void){
 	
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
