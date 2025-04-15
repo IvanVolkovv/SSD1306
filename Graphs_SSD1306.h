@@ -36,12 +36,18 @@ typedef enum {
 	STRAIGHT
 } LineType_t;
 
+typedef enum {
+	SHIFT_no,											
+	SHIFT_yes
+} DataShift_t;
+
 struct PropertiesGraphXY{
 	TypeGraph_SSD1306_t type;					// type of graph
 	NumAxis_t numbers; 								// on/off numbers for axles
 	LineType_t line_type;  						// line type to draw
 	int32_t xAxis_max; 								// maximum value of the X axis
 	int32_t yAxis_max_min;						// maximum and minimum value of the Y axis
+	DataShift_t data_shift; 					// enable or disable shifting of graph points
 }; 
 
 /* --- prototypes --- */ 
@@ -54,6 +60,11 @@ void setAxisNumbers(NumAxis_t);
 void clearXYGraph(void); 
 void updateGraph(void); 
 void setCoord(int32_t, int32_t);
+
+
+void setCoord_D(int32_t, int32_t); 
+
+
 
 
 

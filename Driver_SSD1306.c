@@ -246,7 +246,7 @@ updateScreen_SSD1306(void){
 	sendData(I2C2, ADDR_SSD1306, DisplayBuffer, GDDRAM_SIZE);
 }
 
-/* test */ 
+/* DEBUG */ 
 void 
 updateScreen_SSD1306_D(int32_t size_buff){  
 	sendData(I2C2, ADDR_SSD1306, DisplayBuffer, size_buff);
@@ -262,95 +262,86 @@ clearScreen_SSD1306(void){
   updateScreen_SSD1306();
 }
 
-/*
- * Draw one pixel in the screenbuffer
- * X => X Coordinate
- * Y => Y Coordinate
- * color => Pixel color
- */
+/*!
+* @brief:	Function to set a pixel to a coordinate
+* @param: x, у - coordinates; color - White or Black color of pixel. 
+*/
 void 
 drawPixel_SSD1306(uint8_t x, uint8_t y, SSD1306_COLOR_t color){
 	
-    if(x >= GDDRAM_SEG || y >= GDDRAM_COM)
-        return;															 															// Don't write outside the buffer
+	if( x >= GDDRAM_SEG || y >= GDDRAM_COM )
+		return;															 															
    
-    // Draw in the right color
-    if(color == White)
-        DisplayBuffer[x + (y / 8) * GDDRAM_SEG] |= 1 << (y % 8);
-		else 
-        DisplayBuffer[x + (y / 8) * GDDRAM_SEG] &= ~(1 << (y % 8));
+	if( color == White )
+		DisplayBuffer[x + (y / 8) * GDDRAM_SEG] |= 1 << (y % 8);
+	else 
+		DisplayBuffer[x + (y / 8) * GDDRAM_SEG] &= ~(1 << (y % 8));
 }
 
-/*
- * Draw 1 char to the screen buffer
- * ch       => char om weg te schrijven
- * Font     => Font waarmee we gaan schrijven
- * color    => Black or White
- */
+/*!
+* @brief:	Function for drawing a symbol
+* @param: ch - symbol for drawing; 
+*					Font - structure for storing font parameter; 
+*					color - White or Black color of symbol. 
+*/
 static char 
 ssd1306_WriteChar(char ch, SSD1306_Font_t Font, SSD1306_COLOR_t color) {
 	
-    uint32_t i, b, j;
+	uint32_t i, b, j;
     
-    // Check if character is valid // Проверяем, является ли символ допустимым
-    if (ch < 32 || ch > 126)
-        return 0;
-		
-    // Проверяю остаётся ли еще место в текущей строке для записи символа
-    if (GDDRAM_SEG < (SSD1306.CurrentX + Font.width) ||
-        GDDRAM_COM < (SSD1306.CurrentY + Font.height))
-    {
-        // Недостаточно места в текущей строке
-        return 0;
-    }
-    
-    // Используйте шрифт для написания
-    for(i = 0; i < Font.height; ++i){
-			
-				// нахожу первый байт символа в массиве data
-				b = Font.data[(ch - 32) * Font.height + i];
-			
-				// накладываю маску, чтобы понять нужно высталять пиксель или нет
-        for(j = 0; j < Font.width; ++j){
-					
-					if( (b << j) & 0x8000 )
-						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t) color);
-					else
-						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t)!color);	
-        }
-    }
+	if( ch < 32 || ch > 126 )
+		return 0;
 	
-    // The current space is now taken
-    SSD1306.CurrentX += Font.width;
-    
-    // Return written char for validation
-    return ch;
+	if( GDDRAM_SEG < (SSD1306.CurrentX + Font.width ) || GDDRAM_COM < (SSD1306.CurrentY + Font.height) )
+		return 0;
+
+	for(i = 0; i < Font.height; ++i){
+		
+		b = Font.data[(ch - 32) * Font.height + i];
+		
+		for(j = 0; j < Font.width; ++j){		
+			
+			if( (b << j) & 0x8000 )
+				drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t) color);
+			else
+						drawPixel_SSD1306(SSD1306.CurrentX + j, (SSD1306.CurrentY + i), (SSD1306_COLOR_t)!color);	
+		
+		}
+	}
+	
+	SSD1306.CurrentX += Font.width;
+	return ch;
 }
 
-
-
-/* Write full string to screenbuffer */
+/*!
+* @brief:	Function for drawing a symbol
+* @param: *str - pointer to string; 
+*					Font - structure for storing font parameter; 
+*					color - White or Black color of symbol. 
+*/
 char 
-ssd1306_WriteString(char* str, SSD1306_Font_t Font, SSD1306_COLOR_t color) {
-    while (*str) {
-        if (ssd1306_WriteChar(*str, Font, color) != *str) {
-            // Char could not be written
-            return *str;
-        }
-        str++;
-    }
-    
-    // Everything ok
-    return *str;
+ssd1306_WriteString(char *str, SSD1306_Font_t Font, SSD1306_COLOR_t color) {
+
+	while(*str){
+		if( ssd1306_WriteChar(*str, Font, color) != *str )
+			return *str;
+		str++;
+	}
+ 
+	return *str;
 }
 
-/* Position the cursor */
+/*!
+* @brief:	Function to set the cursor position
+* @param: x, у - coordinates. 
+*/
 void 
 ssd1306_SetCursor(uint8_t x, uint8_t y) {
 	SSD1306.CurrentX = x;
 	SSD1306.CurrentY = y;
 }
 
+/* DEBUG */ 
 void 
 setSizeDrawArea(int32_t start_col, int32_t end_col, int32_t start_page, int32_t end_page){
 	
@@ -370,6 +361,7 @@ setSizeDrawArea(int32_t start_col, int32_t end_col, int32_t start_page, int32_t 
 	
 }
 
+/* DEBUG */ 
 void 
 setDefDrawArea(void){
 	
@@ -387,5 +379,29 @@ setDefDrawArea(void){
   Data[2] = (GDDRAM_COM >> 3U) - 1;
   sendCommand(I2C2, ADDR_SSD1306, Data, 3);
 	
+}
+
+/*!
+* @brief:	Function to shift display data array
+* @param: shift - number of times to shift the array to the left.   
+*/
+void
+shiftDisplayBuffer(uint8_t shift){	
 	
+	uint8_t quant_seg = GDDRAM_SEG - 1; 
+	
+	for(uint32_t sh = 0; sh < shift; ++sh){
+	
+		for(uint32_t i = 0; i < quant_seg; ++i){		
+			DisplayBuffer[i] = DisplayBuffer[i+SFT_COM0_STOP]; 
+			DisplayBuffer[i+SFT_COM1_STRT] = DisplayBuffer[i+SFT_COM1_STOP];		
+			DisplayBuffer[i+SFT_COM2_STRT] = DisplayBuffer[i+SFT_COM2_STOP];		
+			DisplayBuffer[i+SFT_COM3_STRT] = DisplayBuffer[i+SFT_COM3_STOP];		
+		}
+		DisplayBuffer[SFT_COM1_STRT-1] = 0x00;
+		DisplayBuffer[SFT_COM2_STRT-1] = 0x00;
+		DisplayBuffer[SFT_COM3_STRT-1] = 0x00;
+		DisplayBuffer[GDDRAM_SIZE-1] = 0x00;
+	}
+		
 }

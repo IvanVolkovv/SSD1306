@@ -22,56 +22,35 @@
 // #define SSD1306_128x64
 // #define SSD1306_128x128
 
-/* device address ---------------- */ 
-#define ADDR_SSD1306					0x78
-
-#if defined ( SSD1306_128x32 ) && !defined ( SSD1306_128x64 ) && !defined ( SSD1306_128x128 )
-// for 128x32
-#define GDDRAM_SEG						128								// X [pixels]
-#define GDDRAM_COM     				32								// Y [pixels]	
-#define GDDRAM_SIZE 					512								// [bytes]	(GDDRAM_SEG * GDDRAM_COM) / 8 	
-
-#elif !defined SSD1306_128x32 && defined SSD1306_128x64 && !defined SSD1306_128x128
-// for 128x64
-#define GDDRAM_SEG						128							
-#define GDDRAM_COM     				64							
-#define GDDRAM_SIZE 					1024	
-
-#elif !defined SSD1306_128x32 && !defined SSD1306_128x64 && defined SSD1306_128x128
-// for 128x128
-#define GDDRAM_SEG						128							
-#define GDDRAM_COM     				128							
-#define GDDRAM_SIZE 					2048
-
-#else 
-#warning Display size not selected 
-#endif
- 
- // number of pages
-#define	GDDRAM_PAGES					( ( GDDRAM_COM >> 3U ) - 1 ) 
- 
- 
+/* device address ------------------- */ 
+#define ADDR_SSD1306					0x78u		
+/* ---------------------------------- */ 
 
 /* list of commands ----------------------------------------- */ 
- 
-#define DISPLAY_ON					0xAFu						// Set Display ON
-#define DISPLAY_OFF					0xAEu						// Set Display OFF
+// Set Display ON/OFF 
+#define DISPLAY_ON					0xAFu						// ON
+#define DISPLAY_OFF					0xAEu						// OFF
 
-#define DSPL_SET_CLK				0xD5u						// Set Display Clock
- 
-#define DSPL_SET_PUMP				0x8Du						// Charge Pump Setting
+// Set Display Clock
+#define DSPL_SET_CLK				0xD5u						
+
+// Charge Pump Setting
+#define DSPL_SET_PUMP				0x8Du						
 #define DSPL_PUMP_ON				0x14u						// Charge Pump ON
 #define DSPL_PUMP_OFF				0x10u						// Charge Pump OFF
 
-#define DSPL_STR_LINE				0x40u						// Set Display Start Line		
+// Set Display Start Line		
+#define DSPL_STR_LINE				0x40u					
 
-#define DSPL_SET_OFFSET			0xD3u						// Set Display Offset
+// Set Display Offset
+#define DSPL_SET_OFFSET			0xD3u			
 
 // Set COM Output Scan Direction
 #define DSPL_COM_SCAN_NORM	0xC0u						// normal mode		
 #define DSPL_COM_SCAN_REMP	0xC8u						// remapped mode
 
-#define DSPL_MTPLX_RATIO		0xA8u						// Set Multiplex Ratio
+// Set Multiplex Ratio 
+#define DSPL_MTPLX_RATIO		0xA8u					
 
 // Set Segment Re-map
 #define DSPL_SGT_RMP_LEFT		0xA0u		
@@ -107,6 +86,42 @@
 #define DSPL_SET_INVR_ON		0xA7u						// Inverse	
 
 
+/* for shift display buffer	------------------------------------*/ 
+#define SFT_COM0_STRT					0U						// Shift COM0 start
+#define SFT_COM1_STRT					128U								
+#define SFT_COM2_STRT					256U								
+#define SFT_COM3_STRT					384U	
+#define SFT_COM0_STOP					1U						// Shift COM0 stop
+#define SFT_COM1_STOP					129U							
+#define SFT_COM2_STOP					257U							
+#define SFT_COM3_STOP					385U		
+
+#if defined ( SSD1306_128x32 ) && !defined ( SSD1306_128x64 ) && !defined ( SSD1306_128x128 )
+// for 128x32
+#define GDDRAM_SEG						128U							// X [pixels]
+#define GDDRAM_COM     				32U								// Y [pixels]	
+#define GDDRAM_SIZE 					512U							// [bytes]	(GDDRAM_SEG * GDDRAM_COM) / 8 	
+
+#elif !defined ( SSD1306_128x32 ) && defined ( SSD1306_128x64 ) && !defined ( SSD1306_128x128 )
+// for 128x64
+#define GDDRAM_SEG						128U							
+#define GDDRAM_COM     				64U							
+#define GDDRAM_SIZE 					1024U	
+
+#elif !defined ( SSD1306_128x32 ) && !defined ( SSD1306_128x64 ) && defined ( SSD1306_128x128 )
+// for 128x128
+#define GDDRAM_SEG						128U							
+#define GDDRAM_COM     				128U							
+#define GDDRAM_SIZE 					2048U
+
+#else 
+#warning Display size not selected 
+#endif
+ 
+ // number of pages
+#define	GDDRAM_PAGES					( ( GDDRAM_COM >> 3U ) - 1 ) 
+ 
+ 
 // Enumeration for screen colors
 typedef enum {
 	Black = 0x00, // Black color, no pixel
@@ -141,17 +156,18 @@ static void setDisplayInverse(uint8_t);
 void init_SSD1306(void);
 void updateScreen_SSD1306(void); 
 void clearScreen_SSD1306(void); 
+void drawPixel_SSD1306(uint8_t, uint8_t, SSD1306_COLOR_t);
+static char ssd1306_WriteChar(char, SSD1306_Font_t, SSD1306_COLOR_t); 
+char ssd1306_WriteString(char*, SSD1306_Font_t, SSD1306_COLOR_t);
+void ssd1306_SetCursor(uint8_t, uint8_t);
 void setSizeDrawArea(int32_t, int32_t, int32_t, int32_t); 
 void setDefDrawArea(void); 
+void shiftDisplayBuffer(uint8_t); 
 
 /* DEBUG */ 
 void updateScreen_SSD1306_D(int32_t); 
 
-/* import */ 
-void drawPixel_SSD1306(uint8_t, uint8_t, SSD1306_COLOR_t);
-static char ssd1306_WriteChar(char, SSD1306_Font_t, SSD1306_COLOR_t); 
-char ssd1306_WriteString(char*, SSD1306_Font_t, SSD1306_COLOR_t);
-void ssd1306_SetCursor(uint8_t, uint8_t); 
+ 
 
 
 #endif /* __DRIVER_SSD1306_H */
